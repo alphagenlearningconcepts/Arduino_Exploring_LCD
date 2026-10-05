@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart LCD Display - Interactive Lesson</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- Google Font: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              purple: '#5E48C4',
+              purpleDark: '#4A3AAD',
+              purpleMid: '#7B6ED4',
+              purplePale: '#EAE7FE',
+              purpleGhost: '#F5F4FF',
+              yellow: '#FFD071',
+              yellowDark: '#E6B84A',
+              yellowPale: '#FFF3CC',
+              black: '#1A1A1A',
+              greyDark: '#404048',
+              greyMid: '#888896',
+              greyLight: '#F2F2F4',
+              cyan: '#59E4FB',
+              cyanDark: '#055F6E',
+              cyanPale: '#E0FAFE',
+              coral: '#ED5661',
+              coralDark: '#993040',
+              coralPale: '#FFF0F1'
+            }
+          },
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #F5F4FF;
+      color: #1A1A1A;
+      user-select: none;
+    }
+
+    /* Slide Transition Styles */
+    .slide {
+      display: none;
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F2F2F4;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #7B6ED4;
+      border-radius: 8px;
+    }
+
+    /* Step Active Highlight Styles */
+    .step-card {
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    .step-card.active-step {
+      background-color: #ffffff;
+      border-color: #5E48C4;
+      transform: scale(1.02);
+      box-shadow: 0 10px 25px -5px rgba(94, 72, 196, 0.15);
+    }
+
+    /* Interactive Part Cards */
+    .part-card {
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+    }
+    .part-card:hover {
+      transform: translateY(-6px) scale(1.02);
+    }
+    .part-card.active-part {
+      border-width: 4px;
+      transform: translateY(-8px) scale(1.04);
+      box-shadow: 0 16px 30px -8px rgba(0, 0, 0, 0.18);
+    }
+
+    /* Device App Card Styles for Slide 2 */
+    .app-card {
+      background-color: #F2F2F4;
+      border-radius: 20px;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .app-card:hover {
+      transform: translateY(-4px);
+      background-color: #EAE7FE;
+    }
+    .app-card.active-app {
+      background-color: #FFFFFF;
+      border-color: #5E48C4;
+      box-shadow: 0 10px 25px -5px rgba(94, 72, 196, 0.2);
+      transform: translateY(-4px);
+    }
+
+    /* LCD Screen Components */
+    .lcd-frame {
+      background: #20252b;
+      border-radius: 24px;
+      padding: 20px;
+      border: 6px solid #3b4148;
+      box-shadow: 0 16px 35px rgba(0,0,0,0.25);
+    }
+    .lcd-screen {
+      background: #9BCB65;
+      border: 4px solid #6f9947;
+      border-radius: 10px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 800;
+      color: #18300b;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.2);
+    }
+
+    /* Slide 6 Custom Components */
+    .s6-module-display {
+      background-color: #f0f4ff;
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 140px;
+    }
+
+    .s6-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #e0e7ff;
+      color: #4f46e5;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .s6-quiz-box {
+      background-color: #fffbeb;
+      border: 2px solid #fde68a;
+      border-radius: 12px;
+      padding: 15px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .s6-quiz-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #fef3c7;
+      color: #d97706;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+
+    .s6-pin-card {
+      background-color: #f8fafc;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border-left: 4px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .s6-pin-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .s6-card-vcc { border-left-color: #ef4444; }
+    .s6-card-gnd { border-left-color: #10b981; }
+    .s6-card-sda { border-left-color: #3b82f6; }
+    .s6-card-scl { border-left-color: #f59e0b; }
+
+    .s6-icon-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Modal / Completion Overlay */
+    .mission-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 27, 75, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+    }
+    .mission-overlay.show {
+      display: flex;
+      animation: overlayIn 0.35s ease-out;
+    }
+    .mission-card {
+      background: #fff;
+      border: 5px solid #FFD071;
+      border-radius: 30px;
+      padding: 42px 55px;
+      text-align: center;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.35);
+      animation: missionPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 620px;
+      width: 100%;
+    }
+
+    @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes missionPop { from { transform: scale(0.65); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between overflow-hidden bg-brand-purpleGhost text-brand-black">
+
+  <!-- HEADER / NAVBAR -->
+  <header class="bg-brand-purple text-white px-6 py-4 shadow-md flex justify-between items-center z-20">
+    <div class="flex items-center space-x-3">
+      <div class="bg-brand-yellow text-brand-black font-extrabold rounded-full px-3 py-1 text-sm tracking-wide shadow-sm">
+        ALPHAGEN
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white hidden sm:block">
+          Smart LCD Display
+        </h1>
+        <div class="text-[10px] md:text-xs text-brand-purplePale hidden sm:block">
+          Arduino + I2C LCD • Ages 10–12
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown & Slide Counter Navigation -->
+    <div class="flex items-center space-x-3">
+      <label for="slideSelect" class="text-sm font-semibold hidden md:inline text-brand-purplePale">Jump to:</label>
+      <select id="slideSelect" onchange="goToSlide(parseInt(this.value))" class="bg-white text-brand-purple font-bold text-base md:text-lg px-3 py-1.5 rounded-xl border-2 border-brand-yellow focus:outline-none shadow-sm cursor-pointer">
+        <option value="1">1. Welcome</option>
+        <option value="2">2. Applications</option>
+        <option value="3">3. Meet the 16x2 Grid</option>
+        <option value="4">4. I2C Bus Simulator</option>
+        <option value="5">5. Meet the 4 I2C Pins</option>
+        <option value="6">6. Connect Circuit</option>
+        <option value="7">7. Cursor & Display Matrix</option>
+        <option value="8">8. PictoBlox Logic</option>
+        <option value="9">9. 4 Build Steps</option>
+        <option value="10">10. Interactive Simulator</option>
+        <option value="11">11. Final Quiz!</option>
+      </select>
+      <span id="slideCounter" class="text-base md:text-lg font-bold bg-brand-purpleDark px-3 py-1.5 rounded-xl text-brand-yellow border border-brand-purpleMid">
+        1 / 11
+      </span>
+    </div>
+  </header>
+
+  <!-- MAIN SLIDE CONTAINER -->
+  <main class="flex-1 relative flex items-center justify-center p-4 md:p-6 overflow-hidden">
+
+    <!-- SLIDE 1: Welcome -->
+    <section class="slide flex-col items-center justify-center max-w-5xl w-full bg-white rounded-3xl p-8 md:p-12 shadow-xl border-4 border-brand-purplePale relative">
+      <div class="grid lg:grid-cols-2 gap-8 items-center w-full">
+        <div class="text-left">
+          <div class="inline-block bg-brand-purplePale text-brand-purple font-extrabold text-xs md:text-sm tracking-widest uppercase px-5 py-2 rounded-full mb-6">
+            Interactive Arduino & AI Lesson
+          </div>
+          <h1 class="text-4xl md:text-6xl font-extrabold text-brand-black mb-6 leading-tight">
+            Master the <br><span class="text-brand-purple">LCD Display</span>
+          </h1>
+          <button onclick="nextSlide()" class="bg-brand-yellow hover:bg-brand-yellowDark text-brand-black text-xl md:text-2xl font-bold py-4 px-10 rounded-2xl shadow-lg transform hover:scale-105 transition-all flex items-center gap-3">
+            <span>Start Exploring!</span> ➔
+          </button>
+        </div>
+
+        <div class="bg-brand-purpleGhost rounded-3xl p-6 border-2 border-brand-purplePale flex flex-col items-center justify-center">
+          <div class="lcd-frame w-full max-w-sm">
+            <div class="lcd-screen p-4 text-center">
+              <div class="text-lg md:text-2xl tracking-widest font-mono text-emerald-950 font-black">Hello Coder!</div>
+              <div class="text-base md:text-xl tracking-widest font-mono text-emerald-900 mt-2 font-bold">...🎯...</div>
+            </div>
+            <div class="text-[10px] font-mono text-gray-400 text-center mt-3 tracking-widest">16 x 2 CHARACTER LCD</div>
+          </div>
+          <div class="text-center mt-4 font-bold text-brand-purple text-base">
+            A screen that brings your microcontrollers to life!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: Interactive Real-World LCD Applications (Matched to image reference) -->
+    <section class="slide flex-col max-w-5xl w-full bg-white rounded-3xl p-6 md:p-10 shadow-xl border-4 border-brand-purplePale relative overflow-y-auto max-h-full">
+      
+      <!-- Top Title Bar -->
+      <p class="text-base md:text-xl text-brand-greyDark font-medium mb-6">
+        An LCD is a screen that can show letters, numbers, symbols and short messages.
+      </p>
+
+      <!-- 5 Application Selection Cards[cite: 3] -->
+      <div class="grid grid-cols-5 gap-3 md:gap-4 w-full mb-6">
+        <div onclick="selectApp('phone', this)" class="app-card active-app p-3 md:p-4 text-center flex flex-col items-center justify-center">
+          <div class="text-3xl md:text-4xl mb-2">📱</div>
+          <span class="font-extrabold text-xs md:text-base text-brand-black">Phone</span>
+        </div>
+
+        <div onclick="selectApp('dashboard', this)" class="app-card p-3 md:p-4 text-center flex flex-col items-center justify-center">
+          <div class="text-3xl md:text-4xl mb-2">🚗</div>
+          <span class="font-extrabold text-xs md:text-base text-brand-black">Dashboard</span>
+        </div>
+
+        <div onclick="selectApp('calculator', this)" class="app-card p-3 md:p-4 text-center flex flex-col items-center justify-center">
+          <div class="text-3xl md:text-4xl mb-2">🧮</div>
+          <span class="font-extrabold text-xs md:text-base text-brand-black">Calculator</span>
+        </div>
+
+        <div onclick="selectApp('clock', this)" class="app-card p-3 md:p-4 text-center flex flex-col items-center justify-center">
+          <div class="text-3xl md:text-4xl mb-2">⏰</div>
+          <span class="font-extrabold text-xs md:text-base text-brand-black">Clock</span>
+        </div>
+
+        <div onclick="selectApp('atm', this)" class="app-card p-3 md:p-4 text-center flex flex-col items-center justify-center">
+          <div class="text-3xl md:text-4xl mb-2">🏧</div>
+          <span class="font-extrabold text-xs md:text-base text-brand-black">ATM</span>
+        </div>
+      </div>
+
+      <!-- Main Interactive Display Container[cite: 3] -->
+      <div class="w-full bg-white border-2 border-brand-purplePale rounded-3xl p-4 md:p-6 shadow-sm flex flex-col lg:flex-row items-center gap-6 min-h-[220px]">
+        
+        <!-- Left Side: LCD Display Screen Box[cite: 3] -->
+        <div class="w-full lg:w-1/2 bg-[#EFEFEF] rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center min-h-[170px] shadow-inner transition-all">
+          <div id="appDisplayScreen" class="lcd-frame w-full max-w-xs">
+            <div class="lcd-screen p-3 text-center">
+              <div id="appLcdLine1" class="text-sm md:text-lg font-mono text-emerald-950 font-extrabold tracking-widest">CALL: ALEX</div>
+              <div id="appLcdLine2" class="text-xs md:text-sm font-mono text-emerald-900 mt-1 font-bold tracking-widest">00:14 • CONNECTED</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Application Description & Badge[cite: 3] -->
+        <div class="w-full lg:w-1/2 flex flex-col justify-center space-y-3 text-left">
+          <h3 id="appTitle" class="text-2xl md:text-3xl font-extrabold text-brand-black">
+            Phone Display
+          </h3>
+          <p id="appDescription" class="text-sm md:text-base text-brand-greyDark font-medium">
+            Shows incoming caller ID, signal strength, call duration, and text alerts instantly.
+          </p>
+          <div class="pt-2">
+            <span class="inline-block bg-brand-yellowPale text-brand-black font-extrabold text-xs tracking-wider uppercase px-4 py-1.5 rounded-full shadow-sm">
+              TAP ➔ WATCH ➔ DISCOVER
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- SLIDE 3: 16x2 Grid Basics -->
+    <section class="slide flex-col items-center max-w-5xl w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-brand-purplePale">
+      <div class="text-center mb-6">
+        <div class="inline-block bg-brand-purplePale text-brand-purple font-extrabold text-xs md:text-sm tracking-widest uppercase px-4 py-1.5 rounded-full mb-2">
+          DISPLAY BASICS
+        </div>
+        <h2 class="text-2xl md:text-4xl font-extrabold text-brand-purple flex items-center justify-center gap-2">
+          Meet the 16x2 Grid
+        </h2>
+        <p class="text-sm md:text-base text-brand-greyDark font-medium mt-1">
+          <strong>16x2</strong> means 16 columns across and 2 rows down — providing 32 character blocks!
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6 w-full items-center my-auto">
+        <div class="bg-brand-purpleGhost rounded-2xl p-6 border-2 border-brand-purplePale space-y-4">
+          <div id="stepCard1" class="step-card bg-white rounded-xl p-4 font-bold text-brand-black shadow-sm flex items-center gap-3">
+            <span class="bg-brand-purple text-white w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">1</span>
+            <span class="text-sm md:text-base">Row 0 (Top line) holds 16 characters (Col 0 to 15)</span>
+          </div>
+          <div id="stepCard2" class="step-card bg-white rounded-xl p-4 font-bold text-brand-black shadow-sm flex items-center gap-3">
+            <span class="bg-brand-purple text-white w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">2</span>
+            <span class="text-sm md:text-base">Row 1 (Bottom line) holds 16 characters (Col 0 to 15)</span>
+          </div>
+          <div id="stepCard3" class="step-card bg-white rounded-xl p-4 font-bold text-brand-black shadow-sm flex items-center gap-3">
+            <span class="bg-brand-purple text-white w-8 h-8 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0">3</span>
+            <span class="text-sm md:text-base">Set Cursor (Col, Row) tells Arduino where to write!</span>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 rounded-2xl p-6 text-white flex flex-col items-center justify-center border-2 border-gray-700 space-y-4">
+          <div class="text-brand-yellow font-extrabold text-sm uppercase tracking-wider">LCD PIXEL GRID LAYOUT</div>
+          
+          <div class="lcd-frame w-full">
+            <div class="lcd-screen p-3 font-mono text-center space-y-2">
+              <div class="bg-emerald-800/20 p-2 rounded border border-emerald-700/50 text-xs md:text-sm tracking-widest text-emerald-950 font-black">
+                R0: [0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F]
+              </div>
+              <div class="bg-emerald-800/20 p-2 rounded border border-emerald-700/50 text-xs md:text-sm tracking-widest text-emerald-900 font-black">
+                R1: [0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F]
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-800 px-5 py-2.5 rounded-xl text-xs md:text-sm font-mono text-brand-yellow border border-gray-700 text-center w-full">
+            Total Slots = 16 x 2 = 32 Character Positions
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: I2C Communication Simulator -->
+    <section class="slide flex-col items-center max-w-5xl w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-brand-purplePale">
+      <div class="text-center mb-4">
+        <h2 class="text-2xl md:text-4xl font-extrabold text-brand-purple flex items-center justify-center gap-2">
+          I2C Address & Bus Test
+        </h2>
+        <p class="text-sm md:text-base text-brand-greyDark font-medium mt-1">
+          Select I2C address to test signal link with LCD screen!
+        </p>
+      </div>
+
+      <div class="w-full bg-brand-purpleGhost rounded-2xl p-6 border-2 border-brand-purpleMid flex flex-col items-center my-auto space-y-5">
+        <div class="flex flex-wrap justify-center gap-4">
+          <button onclick="setI2cAddress('0x27')" id="i2c27Btn" class="bg-brand-purple text-white font-extrabold px-6 py-3 rounded-xl shadow-md transition transform scale-105">
+            Address 0x27 (Default)
+          </button>
+          <button onclick="setI2cAddress('0x3F')" id="i2c3FBtn" class="bg-brand-greyLight text-brand-black font-extrabold px-6 py-3 rounded-xl shadow-md transition border border-brand-greyMid">
+            Address 0x3F (Alternate)
+          </button>
+          <button onclick="setI2cAddress('Wrong')" id="i2cWrongBtn" class="bg-brand-greyLight text-brand-black font-extrabold px-6 py-3 rounded-xl shadow-md transition border border-brand-greyMid">
+            Wrong Address (0x12)
+          </button>
+        </div>
+
+        <div class="w-full bg-gray-950 rounded-2xl p-5 border-2 border-gray-800 flex flex-col items-center space-y-4 shadow-inner">
+          <div class="w-full flex justify-between items-center text-xs font-mono text-gray-400 px-2">
+            <span>I2C BUS: SDA (A4) / SCL (A5)</span>
+            <span id="i2cStatusPin" class="text-brand-yellow font-extrabold">STATUS: BUS ACTIVE (0x27)</span>
+          </div>
+
+          <div class="lcd-frame w-full max-w-lg">
+            <div id="i2cLcdDisplay" class="lcd-screen p-4 text-center">
+              <div id="lcdLine1" class="text-lg md:text-2xl font-mono text-emerald-950 font-extrabold">I2C CONNECTED!</div>
+              <div id="lcdLine2" class="text-sm md:text-lg font-mono text-emerald-900 mt-1 font-bold">ADDRESS: 0x27</div>
+            </div>
+          </div>
+
+          <div id="i2cSimBox" class="w-full bg-gray-900 rounded-xl p-4 text-white border border-gray-700 text-center space-y-1 transition-all duration-300">
+            <div id="i2cStateTag" class="text-xl md:text-2xl font-extrabold text-brand-yellow">
+              MATCH SUCCESSFUL ➔ LCD READY
+            </div>
+            <p id="i2cStateDesc" class="text-xs md:text-sm text-gray-300">
+              0x27 is the standard I2C address for PCF8574 modules!
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: LCD I2C Module Pins -->
+<section class="slide flex-col items-center max-w-5xl w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-brand-purplePale">
+  <div class="w-full text-left mb-4">
+    <div class="text-brand-purple font-extrabold text-xs md:text-sm tracking-widest uppercase mb-1">I2C BACKPACK PINS</div>
+    <h2 class="text-3xl md:text-5xl font-extrabold text-brand-black leading-tight">Meet the 4 I2C Pins</h2>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 w-full mb-4">
+    <div class="s6-module-display border-2 border-brand-purplePale flex flex-col items-center justify-center p-2 relative h-56 md:h-64 overflow-hidden">
+      <div class="s6-badge">4 PIN I2C BUS</div>
+      <img src="I2CLCD.png" alt="I2C Module" class="max-h-full w-auto object-contain drop-shadow-md p-2 pointer-events-none" />
+    </div>
+
+    <div class="s6-quiz-box">
+      <div class="s6-quiz-badge">MISSION • 01</div>
+      <div class="text-base font-extrabold text-brand-purple text-center mt-1">🕵️ Knowledge Check</div>
+      <div class="text-xs text-gray-600 text-center font-bold my-2">Which pin carries DATA signals from Arduino to LCD?</div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <button class="bg-white border border-gray-200 rounded-full py-2 px-1 text-xs font-extrabold hover:border-brand-purple hover:bg-brand-purpleGhost transition" onclick="checkSlide6Answer(false)">🔴 VCC</button>
+        <button class="bg-white border border-gray-200 rounded-full py-2 px-1 text-xs font-extrabold hover:border-brand-purple hover:bg-brand-purpleGhost transition" onclick="checkSlide6Answer(false)">🌍 GND</button>
+        <button class="bg-white border border-gray-200 rounded-full py-2 px-1 text-xs font-extrabold hover:border-brand-purple hover:bg-brand-purpleGhost transition" onclick="checkSlide6Answer(true)">🔵 SDA</button>
+        <button class="bg-white border border-gray-200 rounded-full py-2 px-1 text-xs font-extrabold hover:border-brand-purple hover:bg-brand-purpleGhost transition" onclick="checkSlide6Answer(false)">🟡 SCL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Pin Cards with explicit keys -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full mb-4 relative z-10">
+    <div class="s6-pin-card s6-card-gnd cursor-pointer select-none" onclick="selectSlide6Pin('gnd')">
+      <div class="s6-icon-circle bg-emerald-500">🌍</div>
+      <div>
+        <span class="text-xs font-extrabold text-emerald-600 block">GND</span>
+        <span class="text-[10px] text-gray-600">Ground (0V)</span>
+      </div>
+    </div>
+
+    <div class="s6-pin-card s6-card-vcc cursor-pointer select-none" onclick="selectSlide6Pin('vcc')">
+      <div class="s6-icon-circle bg-red-500">🔴</div>
+      <div>
+        <span class="text-xs font-extrabold text-red-600 block">VCC</span>
+        <span class="text-[10px] text-gray-600">Power (5V)</span>
+      </div>
+    </div>
+
+    <div class="s6-pin-card s6-card-sda cursor-pointer select-none" onclick="selectSlide6Pin('sda')">
+      <div class="s6-icon-circle bg-blue-500">🔵</div>
+      <div>
+        <span class="text-xs font-extrabold text-blue-600 block">SDA</span>
+        <span class="text-[10px] text-gray-600">Data Line (A4)</span>
+      </div>
+    </div>
+
+    <div class="s6-pin-card s6-card-scl cursor-pointer select-none" onclick="selectSlide6Pin('scl')">
+      <div class="s6-icon-circle bg-amber-500">🟡</div>
+      <div>
+        <span class="text-xs font-extrabold text-amber-600 block">SCL</span>
+        <span class="text-[10px] text-gray-600">Clock Line (A5)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Target Display Card -->
+  <div class="w-full bg-slate-100 border border-slate-300 rounded-xl p-3 text-center text-xs md:text-sm font-bold text-slate-700 transition-all duration-200" id="slide6StatusBar">
+    Click a pin above to inspect its job!
+  </div>
+</section>
+
+    <!-- SLIDE 6: Connect Circuit -->
+    <section class="slide flex-col items-center max-w-6xl w-full bg-white rounded-3xl p-5 md:p-7 shadow-xl border-4 border-brand-purplePale">
+      <div class="w-full text-left mb-4">
+        <div class="text-brand-purple font-extrabold text-xs md:text-sm tracking-widest uppercase mb-1">
+          • CONNECT THE CIRCUIT
+        </div>
+        <h2 class="text-3xl md:text-5xl font-extrabold text-brand-black leading-tight">
+          Wire the LCD I2C System!
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
+        <div class="bg-[#23262B] rounded-3xl p-5 md:p-7 text-white min-h-[350px] flex flex-col justify-between">
+          <div class="flex items-center gap-2 text-brand-yellow font-extrabold text-lg md:text-xl mb-3">
+            🤖 <span>ARDUINO PIN MAP</span>
+          </div>
+
+          <div class="space-y-2.5">
+            <div class="bg-[#30343A] rounded-xl px-4 py-2 flex justify-between items-center">
+              <span class="text-sm md:text-base">LCD GND</span>
+              <strong class="font-mono text-sm md:text-base text-red-400">GND</strong>
+            </div>
+            <div class="bg-[#30343A] rounded-xl px-4 py-2 flex justify-between items-center">
+              <span class="text-sm md:text-base">LCD VCC</span>
+              <strong class="font-mono text-sm md:text-base text-brand-cyan">5V</strong>
+            </div>
+            <div class="bg-[#30343A] rounded-xl px-4 py-2 flex justify-between items-center">
+              <span class="text-sm md:text-base">LCD SDA</span>
+              <strong class="font-mono text-sm md:text-base text-brand-yellow">Analog Pin A4</strong>
+            </div>
+            <div class="bg-[#30343A] rounded-xl px-4 py-2 flex justify-between items-center">
+              <span class="text-sm md:text-base">LCD SCL</span>
+              <strong class="font-mono text-sm md:text-base text-amber-400">Analog Pin A5</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border-2 border-gray-200 p-5 md:p-7 min-h-[350px] shadow-sm flex flex-col justify-between">
+          <div class="flex items-center gap-2 text-xl md:text-2xl font-medium text-brand-black mb-2">
+            🔌 <span>Wire Connections</span>
+          </div>
+
+          <div class="space-y-2.5">
+            <div class="border-2 border-gray-200 rounded-2xl px-4 py-2 flex items-center justify-between gap-3">
+              <span class="font-extrabold text-sm md:text-base">GND → GND</span>
+              <button onclick="connectLcdWire(this)" class="bg-brand-purple hover:bg-brand-purpleDark text-white px-4 py-1.5 rounded-xl font-extrabold text-xs md:text-sm transition">
+                Connect
+              </button>
+            </div>
+            <div class="border-2 border-gray-200 rounded-2xl px-4 py-2 flex items-center justify-between gap-3">
+              <span class="font-extrabold text-sm md:text-base">VCC → 5V</span>
+              <button onclick="connectLcdWire(this)" class="bg-brand-purple hover:bg-brand-purpleDark text-white px-4 py-1.5 rounded-xl font-extrabold text-xs md:text-sm transition">
+                Connect
+              </button>
+            </div>
+            <div class="border-2 border-gray-200 rounded-2xl px-4 py-2 flex items-center justify-between gap-3">
+              <span class="font-extrabold text-sm md:text-base">SDA → Pin A4</span>
+              <button onclick="connectLcdWire(this)" class="bg-brand-purple hover:bg-brand-purpleDark text-white px-4 py-1.5 rounded-xl font-extrabold text-xs md:text-sm transition">
+                Connect
+              </button>
+            </div>
+            <div class="border-2 border-gray-200 rounded-2xl px-4 py-2 flex items-center justify-between gap-3">
+              <span class="font-extrabold text-sm md:text-base">SCL → Pin A5</span>
+              <button onclick="connectLcdWire(this)" class="bg-brand-purple hover:bg-brand-purpleDark text-white px-4 py-1.5 rounded-xl font-extrabold text-xs md:text-sm transition">
+                Connect
+              </button>
+            </div>
+          </div>
+
+          <div id="lcdCircuitStatus" class="mt-2 bg-gray-100 text-brand-black p-2.5 rounded-xl text-center text-xs md:text-sm font-extrabold">
+            0 / 4 connections made.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  <!-- SLIDE 7: Cursor Position Matrix -->
+<section class="slide flex-col items-center max-w-5xl w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-brand-purplePale">
+  <div class="text-center mb-4">
+    <div class="inline-block bg-brand-cyanPale text-brand-cyanDark font-extrabold text-xs md:text-sm tracking-widest uppercase px-4 py-1.5 rounded-full mb-1">
+      CURSOR MATRIX
+    </div>
+    <h2 class="text-2xl md:text-4xl font-extrabold text-brand-purple">
+      Set Cursor Coordinates
+    </h2>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-center my-auto">
+    <div class="bg-brand-purpleGhost p-6 rounded-2xl border-2 border-brand-purpleMid space-y-4">
+      <label class="block text-xs font-bold text-brand-purple uppercase">Select Cursor Column & Row:</label>
+      
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label class="text-xs font-bold text-gray-600 block mb-1">Column (0-15):</label>
+          <select id="cursorColSelect" onchange="updateCursorMatrix()" class="w-full bg-white text-brand-purple font-bold px-3 py-2 rounded-xl border-2 border-brand-purpleMid">
+            <option value="0">Col 0 (Left)</option>
+            <option value="1">Col 1</option>
+            <option value="2">Col 2</option>
+            <option value="3">Col 3</option>
+            <option value="4">Col 4</option>
+            <option value="5">Col 5</option>
+            <option value="6">Col 6</option>
+            <option value="7">Col 7</option>
+            <option value="8">Col 8 (Middle)</option>
+            <option value="9">Col 9</option>
+            <option value="10">Col 10</option>
+            <option value="11" selected>Col 11</option>
+            <option value="12">Col 12</option>
+            <option value="13">Col 13</option>
+            <option value="14">Col 14</option>
+            <option value="15">Col 15</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="text-xs font-bold text-gray-600 block mb-1">Row (0-1):</label>
+          <select id="cursorRowSelect" onchange="updateCursorMatrix()" class="w-full bg-white text-brand-purple font-bold px-3 py-2 rounded-xl border-2 border-brand-purpleMid">
+            <option value="0">Row 0 (Top)</option>
+            <option value="1" selected>Row 1 (Bottom)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-gray-600 block mb-1">Message Text:</label>
+        <input id="cursorTextInput" type="text" value="ALPHAGEN" maxlength="16" oninput="updateCursorMatrix()" class="w-full bg-white text-brand-black font-bold px-3 py-2 rounded-xl border-2 border-brand-purpleMid focus:outline-none">
+      </div>
+    </div>
+
+    <div class="lcd-frame w-full">
+      <div class="lcd-screen p-4 font-mono text-left space-y-2">
+        <div id="lcdMatrixRow0" class="bg-emerald-800/20 p-2 rounded border border-emerald-700/50 text-sm md:text-base tracking-widest text-emerald-950 font-black h-10 flex items-center">
+          ................
+        </div>
+        <div id="lcdMatrixRow1" class="bg-emerald-800/20 p-2 rounded border border-emerald-700/50 text-sm md:text-base tracking-widest text-emerald-900 font-black h-10 flex items-center">
+          ................
+        </div>
+      </div>
+    </div>
+  </div>
+</section>  
+
+    <!-- SLIDE 8: PictoBlox Block Logic Builder -->
+    <section class="slide flex-col items-center justify-center max-w-7xl w-full bg-white rounded-3xl p-8 md:p-12 shadow-xl border-4 border-brand-purplePale relative">
+      <div class="text-center mb-6">
+        <div class="inline-block bg-brand-purplePale text-brand-purple font-extrabold text-xs md:text-sm tracking-widest uppercase px-5 py-2 rounded-full mb-3">
+          PICTOBLOX LOGIC BUILDER
+        </div>
+        <h2 class="text-3xl md:text-5xl font-extrabold text-brand-black">
+          Build the Face Detection Program
+        </h2>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8 w-full items-start">
+        <div class="bg-brand-purpleGhost rounded-3xl p-6 border-2 border-brand-purplePale flex flex-col gap-4">
+          <div class="text-xs font-bold text-brand-purple tracking-widest uppercase">AVAILABLE BLOCKS POOL:</div>
+          
+          <div class="flex flex-col gap-2">
+            <button onclick="addLogicBlock('turn_video')" id="btn-turn_video" class="w-full text-left bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-4 rounded-xl shadow transition-all flex justify-between items-center text-sm">
+              <span>📷 turn [on] video on stage with [0]% transparency</span>
+              <span class="text-xs bg-white/20 px-2 py-1 rounded">+ Add</span>
+            </button>
+
+            <button onclick="addLogicBlock('analyse_image')" id="btn-analyse_image" class="w-full text-left bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-4 rounded-xl shadow transition-all flex justify-between items-center text-sm">
+              <span>🔍 analyse image from [camera]</span>
+              <span class="text-xs bg-white/20 px-2 py-1 rounded">+ Add</span>
+            </button>
+
+            <button onclick="addLogicBlock('if_faces')" id="btn-if_faces" class="w-full text-left bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow transition-all flex justify-between items-center text-sm">
+              <span>❓ if &lt;get # faces &gt; 0&gt; then</span>
+              <span class="text-xs bg-white/20 px-2 py-1 rounded">+ Add</span>
+            </button>
+
+            <button onclick="addLogicBlock('say_expression')" id="btn-say_expression" class="w-full text-left bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl shadow transition-all flex justify-between items-center text-sm">
+              <span>💬 say (get expression of face 1) for (2) seconds</span>
+              <span class="text-xs bg-white/20 px-2 py-1 rounded">+ Add</span>
+            </button>
+
+            <button onclick="addLogicBlock('say_no_face')" id="btn-say_no_face" class="w-full text-left bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl shadow transition-all flex justify-between items-center text-sm">
+              <span>💬 else say [No face detected] for (2) seconds</span>
+              <span class="text-xs bg-white/20 px-2 py-1 rounded">+ Add</span>
+            </button>
+          </div>
+
+          <div class="bg-amber-100 rounded-2xl p-4 border-2 border-amber-300 mt-2">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-extrabold text-amber-800 tracking-wider">🔁 forever loop</span>
+              <button onclick="resetLogicBuilder()" class="text-xs font-bold bg-amber-200 hover:bg-amber-300 text-amber-900 px-3 py-1 rounded-lg transition-all">Reset</button>
+            </div>
+            <div id="assembly-container" class="min-h-[140px] border-2 border-dashed border-amber-400 rounded-xl p-3 flex flex-col gap-2 items-center justify-center bg-white/60">
+              <span id="empty-msg" class="text-xs font-semibold text-amber-700 text-center">Click blocks above to assemble loop!</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 text-white rounded-3xl p-6 shadow-inner flex flex-col justify-between h-full min-h-[380px]">
+          <div>
+            <div class="text-xs font-bold text-amber-400 tracking-widest uppercase mb-4">PICTOBLOX EXECUTION CHECK:</div>
+            
+            <div id="execution-box" class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 text-sm font-mono text-slate-300 leading-relaxed min-h-[180px] flex items-center justify-center text-center">
+              Assemble all 5 blocks to test program logic!
+            </div>
+          </div>
+
+          <button onclick="verifyLogicProgram()" class="w-full bg-brand-yellow hover:bg-brand-yellowDark text-brand-black text-lg font-bold py-4 rounded-2xl shadow-lg transition-all mt-6">
+            Verify Program Logic
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: 4 Building Steps -->
+    <section class="slide flex-col items-center max-w-6xl w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-brand-purplePale">
+      <div class="text-center mb-6">
+        <div class="inline-block bg-brand-purplePale text-brand-purple font-extrabold text-xs md:text-sm tracking-widest uppercase px-4 py-1.5 rounded-full mb-2">
+          BUILD WORKFLOW
+        </div>
+        <h2 class="text-2xl md:text-4xl font-extrabold text-brand-purple text-center">
+          4 Steps to Build the LCD Display System
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-6 my-auto">
+        <div onclick="highlightBuildStep(1)" class="part-card bg-brand-purplePale rounded-2xl p-5 border-2 border-brand-purplePale flex flex-col justify-between hover:border-brand-purple transition-all">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="w-8 h-8 rounded-full bg-brand-purple text-white flex items-center justify-center font-extrabold text-sm">1</span>
+            </div>
+            <h3 class="text-base font-extrabold text-brand-black mb-2 leading-tight">Build Connections</h3>
+          </div>
+          <span class="inline-block mt-4 text-[11px] font-bold text-brand-purple bg-white px-3 py-1 rounded-lg text-center shadow-sm">
+            WIRING
+          </span>
+        </div>
+
+        <div onclick="highlightBuildStep(2)" class="part-card bg-brand-yellowPale rounded-2xl p-5 border-2 border-brand-yellow flex flex-col justify-between hover:border-amber-400 transition-all">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-extrabold text-sm">2</span>
+            </div>
+            <h3 class="text-base font-extrabold text-brand-black mb-2 leading-tight">Check & Set I2C Address</h3>
+          </div>
+          <span class="inline-block mt-4 text-[11px] font-bold text-yellow-800 bg-white px-3 py-1 rounded-lg text-center shadow-sm">
+            CONFIG
+          </span>
+        </div>
+
+        <div onclick="highlightBuildStep(3)" class="part-card bg-brand-cyanPale rounded-2xl p-5 border-2 border-cyan-300 flex flex-col justify-between hover:border-cyan-500 transition-all">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="w-8 h-8 rounded-full bg-cyan-600 text-white flex items-center justify-center font-extrabold text-sm">3</span>
+            </div>
+            <h3 class="text-base font-extrabold text-brand-black mb-2 leading-tight">Load Face/ Object Extension</h3>
+          </div>
+          <span class="inline-block mt-4 text-[11px] font-bold text-brand-cyanDark bg-white px-3 py-1 rounded-lg text-center shadow-sm">
+            AI Extension
+          </span>
+        </div>
+
+        <div onclick="highlightBuildStep(4)" class="part-card bg-green-50 rounded-2xl p-5 border-2 border-green-300 flex flex-col justify-between hover:border-green-500 transition-all">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-extrabold text-sm">4</span>
+            </div>
+            <h3 class="text-base font-extrabold text-brand-black mb-2 leading-tight">Develop the Code Logic</h3>
+          </div>
+          <span class="inline-block mt-4 text-[11px] font-bold text-green-700 bg-white px-3 py-1 rounded-lg text-center shadow-sm">
+            PROGRAMMING
+          </span>
+        </div>
+      </div>
+
+      <div id="buildStepStatus" class="w-full bg-brand-greyLight border-2 border-brand-greyMid rounded-2xl p-4 text-center font-bold text-xs md:text-sm text-brand-greyDark shadow-sm">
+        Click any step above to inspect its implementation focus!
+      </div>
+    </section>
+
+    <!-- SLIDE 10: Interactive Face Detection LCD Simulator -->
+<section class="slide flex-col items-center max-w-5xl w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-brand-purplePale">
+  <div class="text-center mb-4">
+    <div class="inline-block bg-brand-purplePale text-brand-purple font-extrabold text-xs md:text-sm tracking-widest uppercase px-4 py-1.5 rounded-full mb-1">
+      AI + LCD SIMULATOR
+    </div>
+    <h2 class="text-2xl md:text-4xl font-extrabold text-brand-purple">
+      Live LCD Message Board 📟
+    </h2>
+    <p class="text-sm md:text-base text-brand-greyDark font-medium mt-1">
+      Simulate camera expressions or send custom text directly to the 16x2 screen!
+    </p>
+  </div>
+
+  <div class="bg-brand-purpleGhost border-2 border-brand-purpleMid rounded-2xl p-5 w-full flex flex-col items-center my-auto space-y-5">
+    
+    <!-- LCD Display Frame -->
+    <div class="lcd-frame w-full max-w-md">
+      <div class="lcd-screen p-5 text-center font-mono">
+        <div id="simLcdLine1" class="text-lg md:text-2xl text-emerald-950 font-extrabold tracking-widest min-h-[32px] flex items-center justify-center">
+          FACES: 1 DETECTED
+        </div>
+        <div id="simLcdLine2" class="text-sm md:text-lg text-emerald-900 mt-1 font-bold tracking-widest min-h-[28px] flex items-center justify-center">
+          EXPR: HAPPY
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Face Detection Preset Trigger Buttons -->
+    <div class="w-full max-w-xl bg-white p-3 rounded-2xl border-2 border-brand-purplePale text-center">
+      <span class="text-xs font-bold text-brand-purple uppercase tracking-wider block mb-2">
+        📷 Simulate Camera Feed Detection (PictoBlox Logic):
+      </span>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <button onclick="triggerAiPreset('happy')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-extrabold py-2 px-3 rounded-xl text-xs transition border border-emerald-300">
+          😊 Happy Face
+        </button>
+        <button onclick="triggerAiPreset('surprised')" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-extrabold py-2 px-3 rounded-xl text-xs transition border border-blue-300">
+          😮 Surprised
+        </button>
+        <button onclick="triggerAiPreset('sad')" class="bg-purple-100 hover:bg-purple-200 text-purple-800 font-extrabold py-2 px-3 rounded-xl text-xs transition border border-purple-300">
+          😢 Sad Face
+        </button>
+        <button onclick="triggerAiPreset('noface')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 font-extrabold py-2 px-3 rounded-xl text-xs transition border border-rose-300">
+          🚫 No Face
+        </button>
+      </div>
+    </div>
+
+    <!-- Manual Text Inputs -->
+    <div class="flex flex-col sm:flex-row gap-3 w-full max-w-xl">
+      <input id="simInputLine1" type="text" placeholder="Line 1 (e.g. FACES: 1)" maxlength="16" class="flex-1 bg-white border-2 border-brand-purpleMid rounded-xl px-4 py-2 font-bold text-sm focus:outline-none focus:border-brand-purple">
+      <input id="simInputLine2" type="text" placeholder="Line 2 (e.g. EXPR: HAPPY)" maxlength="16" class="flex-1 bg-white border-2 border-brand-purpleMid rounded-xl px-4 py-2 font-bold text-sm focus:outline-none focus:border-brand-purple">
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3">
+      <button onclick="updateSimLcd()" class="bg-brand-purple hover:bg-brand-purpleDark text-white font-extrabold px-6 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 text-sm">
+        📺 Send to Screen
+      </button>
+      <button onclick="clearSimLcd()" class="bg-brand-greyLight hover:bg-brand-greyMid text-brand-black font-extrabold px-6 py-2.5 rounded-xl shadow-md transition border border-brand-greyMid text-sm">
+        🧹 Clear Screen
+      </button>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="simLcdStatus" class="text-xs md:text-sm font-bold text-brand-purple bg-white border-2 border-brand-purplePale px-5 py-2 rounded-xl shadow-sm text-center w-full max-w-xl">
+      Display Status: READY • I2C (0x27)
+    </div>
+
+  </div>
+</section>
+
+    <!-- SLIDE 11: Quiz & Completion Check -->
+    <section class="slide flex-col items-center max-w-4xl w-full bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-brand-purplePale overflow-y-auto max-h-full">
+      <div class="text-center mb-4">
+        <h2 class="text-2xl md:text-4xl font-extrabold text-brand-purple">
+          Final Mission Knowledge Check! 🏆
+        </h2>
+      </div>
+
+      <div class="w-full space-y-4 mb-6">
+        <div class="bg-brand-purpleGhost p-4 rounded-xl border border-brand-purpleMid">
+          <p class="font-bold text-sm text-brand-black mb-3">
+            1. How many total character positions are on a 16x2 LCD display?
+          </p>
+          <div class="flex gap-3">
+            <button onclick="checkLcdQuiz(1, false, this)" class="q1-btn flex-1 bg-white hover:bg-brand-greyLight border border-brand-greyMid py-2 px-3 rounded-lg font-bold text-xs md:text-sm">
+              16 Characters
+            </button>
+            <button onclick="checkLcdQuiz(1, true, this)" class="q1-btn flex-1 bg-white hover:bg-brand-greyLight border border-brand-greyMid py-2 px-3 rounded-lg font-bold text-xs md:text-sm">
+              32 Characters
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-brand-purpleGhost p-4 rounded-xl border border-brand-purpleMid">
+          <p class="font-bold text-sm text-brand-black mb-3">
+            2. Which pin carries the clock signal for data synchronization in I2C?
+          </p>
+          <div class="flex gap-3">
+            <button onclick="checkLcdQuiz(2, false, this)" class="q2-btn flex-1 bg-white hover:bg-brand-greyLight border border-brand-greyMid py-2 px-3 rounded-lg font-bold text-xs md:text-sm">
+              SDA Pin (A4)
+            </button>
+            <button onclick="checkLcdQuiz(2, true, this)" class="q2-btn flex-1 bg-white hover:bg-brand-greyLight border border-brand-greyMid py-2 px-3 rounded-lg font-bold text-xs md:text-sm">
+              SCL Pin (A5)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER CONTROLS -->
+  <footer class="bg-white border-t-2 border-brand-purplePale px-6 py-4 flex justify-between items-center z-20 shadow-lg">
+    <button id="prevBtn" onclick="prevSlide()" class="bg-brand-purpleGhost hover:bg-brand-purplePale text-brand-purple font-extrabold px-6 py-3 rounded-2xl transition border-2 border-brand-purpleMid disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 text-base md:text-lg">
+      Previous
+    </button>
+
+    <div class="hidden md:flex items-center space-x-2" id="dotContainer"></div>
+
+    <button id="nextBtn" onclick="handleNextOrFinish()" class="bg-brand-yellow hover:bg-brand-yellowDark text-brand-black font-extrabold px-6 py-3 rounded-2xl transition shadow-md flex items-center gap-2 text-base md:text-lg">
+      Next ➡️
+    </button>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.15) {
+      initAudio();
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playCorrectSound() {
+      playTone(523.25, 'triangle', 0.1);
+      setTimeout(() => playTone(659.25, 'triangle', 0.15), 100);
+      setTimeout(() => playTone(783.99, 'triangle', 0.2), 200);
+    }
+
+    function playWrongSound() {
+      playTone(220, 'sawtooth', 0.15);
+      setTimeout(() => playTone(180, 'sawtooth', 0.2), 120);
+    }
+
+    function triggerFinishCelebration() {
+      playCorrectSound();
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+      }
+    }
+
+    // State Variables
+    let currentSlide = 1;
+    const totalSlides = 11;
+    let connectedLcdWires = 0;
+
+    // Slide 2 Application Selection Data & Interaction
+    const appData = {
+      phone: {
+        title: "Phone Display",
+        line1: "CALL: ALEX",
+        line2: "00:14 • CONNECTED",
+        description: "Shows incoming caller ID, signal strength, call duration, and text alerts instantly."
+      },
+      dashboard: {
+        title: "Dashboard Display",
+        line1: "SPEED: 65 KM/H",
+        line2: "FUEL: 82% • ECO",
+        description: "Displays vehicle speed, fuel level, engine status, and driver notifications."
+      },
+      calculator: {
+        title: "Calculator Display",
+        line1: "128 x 16 =",
+        line2: "2048",
+        description: "Shows typed numbers, mathematical operators, and instant calculation results."
+      },
+      clock: {
+        title: "Digital Clock Display",
+        line1: "TIME: 10:45:30 AM",
+        line2: "ALARM: 07:00 AM",
+        description: "Displays live system time, date, timer countdowns, and active alarm status."
+      },
+      atm: {
+        title: "ATM Screen Display",
+        line1: "ENTER PIN: ****",
+        line2: "PRESS OK TO CONTINUE",
+        description: "Guides user banking transactions with step-by-step instructions and prompts."
+      }
+    };
+
+    function selectApp(key, el) {
+      playTone(480, 'sine', 0.1);
+      document.querySelectorAll('.app-card').forEach(card => card.classList.remove('active-app'));
+      if (el) el.classList.add('active-app');
+
+      const data = appData[key];
+      if (data) {
+        document.getElementById('appTitle').innerText = data.title;
+        document.getElementById('appDescription').innerText = data.description;
+        document.getElementById('appLcdLine1').innerText = data.line1;
+        document.getElementById('appLcdLine2').innerText = data.line2;
+      }
+    }
+
+    // Slide 5 Helper Functions
+   const pinData = {
+  gnd: "GND: Connects to Arduino Ground (0V) to complete the electric circuit.",
+  vcc: "VCC: Connects to Arduino 5V pin to supply power to the display.",
+  sda: "SDA: Serial Data Line - carries text and command data (Pin A4).",
+  scl: "SCL: Serial Clock Line - synchronizes data timing (Pin A5)."
+};
+
+function selectSlide6Pin(pinKey) {
+  playTone(480, 'sine', 0.1);
+  const statusBar = document.getElementById('slide6StatusBar');
+  
+  if (statusBar && pinData[pinKey]) {
+    statusBar.innerText = pinData[pinKey];
+    statusBar.style.backgroundColor = '#f1f5f9';
+    statusBar.style.color = '#334155';
+    statusBar.style.borderColor = '#cbd5e1';
+  }
+}
+
+    function checkSlide6Answer(isCorrect) {
+      const statusBar = document.getElementById('slide6StatusBar');
+      if (isCorrect) {
+        playCorrectSound();
+        statusBar.innerText = '✅ Correct! SDA (Serial Data Line) carries character text data to the LCD!';
+        statusBar.style.backgroundColor = '#dcfce7';
+        statusBar.style.color = '#15803d';
+      } else {
+        playWrongSound();
+        statusBar.innerText = '❌ Try again! Think about which pin carries the DATA signals.';
+        statusBar.style.backgroundColor = '#fee2e2';
+        statusBar.style.color = '#b91c1c';
+      }
+    }
+
+    // Slide 9 Helper Functions
+    function highlightBuildStep(stepNum) {
+      playTone(400 + stepNum * 100, 'sine', 0.12);
+      const statusBanner = document.getElementById('buildStepStatus');
+      const messages = [
+        "Step 1: Connect the LCD Pins with Arduino to complete the 4-wire circuit.",
+        "Step 2: Verify the I2C address (0x27) using PictoBlox initialization blocks.",
+        "Step 3: Load the required AI extensions in the PictoBlox.",
+        "Step 4: Use clear screen and set cursor blocks to print detected results!"
+      ];
+      if (statusBanner) {
+        statusBanner.innerText = messages[stepNum - 1];
+      }
+    }
+
+    // Slide 4 I2C Simulation
+    function setI2cAddress(addr) {
+      const line1 = document.getElementById('lcdLine1');
+      const line2 = document.getElementById('lcdLine2');
+      const statusPin = document.getElementById('i2cStatusPin');
+      const tag = document.getElementById('i2cStateTag');
+      const desc = document.getElementById('i2cStateDesc');
+      const simBox = document.getElementById('i2cSimBox');
+
+      if (addr === '0x27') {
+        playCorrectSound();
+        line1.innerText = "I2C CONNECTED!";
+        line2.innerText = "ADDRESS: 0x27";
+        statusPin.innerText = "STATUS: BUS ACTIVE (0x27)";
+        tag.innerText = "MATCH SUCCESSFUL ➔ LCD READY";
+        desc.innerText = "0x27 is the default I2C address for PCF8574 modules!";
+        tag.className = "text-xl md:text-2xl font-extrabold text-brand-yellow";
+        simBox.className = "w-full bg-gray-900 rounded-xl p-4 text-white border border-gray-700 text-center space-y-1 transition-all duration-300";
+      } else if (addr === '0x3F') {
+        playCorrectSound();
+        line1.innerText = "I2C CONNECTED!";
+        line2.innerText = "ADDRESS: 0x3F";
+        statusPin.innerText = "STATUS: BUS ACTIVE (0x3F)";
+        tag.innerText = "MATCH SUCCESSFUL ➔ LCD READY";
+        desc.innerText = "0x3F is an alternate I2C address for PCF8574A modules!";
+        tag.className = "text-xl md:text-2xl font-extrabold text-green-400";
+      } else {
+        playWrongSound();
+        line1.innerText = "ERROR: NO MATCH";
+        line2.innerText = "BLANK SCREEN";
+        statusPin.innerText = "STATUS: ADDRESS MISMATCH";
+        tag.innerText = "DISCONNECTED ➔ ADDRESS MISMATCH";
+        desc.innerText = "Wrong I2C address results in a blank screen or missing text!";
+        tag.className = "text-xl md:text-2xl font-extrabold text-red-400";
+      }
+    }
+
+    // Slide 6 Circuit Connections
+    function connectLcdWire(btn) {
+      if (btn.disabled) return;
+      playCorrectSound();
+      btn.disabled = true;
+      btn.innerText = "Connected ✓";
+      btn.className = "bg-green-600 text-white px-4 py-1.5 rounded-xl font-extrabold text-xs md:text-sm cursor-default";
+      connectedLcdWires++;
+
+      const status = document.getElementById('lcdCircuitStatus');
+      status.innerText = `${connectedLcdWires} / 4 connections made.`;
+      if (connectedLcdWires === 4) {
+        status.innerText = "🎉 All 4 LCD I2C wires correctly connected!";
+        status.className = "mt-2 bg-green-100 text-green-800 p-2.5 rounded-xl text-center text-xs md:text-sm font-extrabold border border-green-400";
+      }
+    }
+
+    // Slide 7 Cursor Matrix Update Function
+function updateCursorMatrix() {
+  const colEl = document.getElementById('cursorColSelect');
+  const rowEl = document.getElementById('cursorRowSelect');
+  const textEl = document.getElementById('cursorTextInput');
+
+  if (!colEl || !rowEl || !textEl) return;
+
+  const col = parseInt(colEl.value, 10) || 0;
+  const row = parseInt(rowEl.value, 10) || 0;
+  const rawText = textEl.value || "";
+
+  // Insert leading spaces equal to column offset and constrain total row length to 16 characters
+  const formattedText = (' '.repeat(col) + rawText).padEnd(16, '.').slice(0, 16);
+
+  const r0 = document.getElementById('lcdMatrixRow0');
+  const r1 = document.getElementById('lcdMatrixRow1');
+
+  if (row === 0) {
+    if (r0) r0.innerText = formattedText;
+    if (r1) r1.innerText = "................";
+  } else {
+    if (r0) r0.innerText = "................";
+    if (r1) r1.innerText = formattedText;
+  }
+
+  playTone(440, 'sine', 0.08);
+}
+  
+
+    // Slide 8 Logic Builder
+    let assembledBlocks = [];
+    const correctOrder = ['turn_video', 'analyse_image', 'if_faces', 'say_expression', 'say_no_face'];
+
+    function addLogicBlock(blockId) {
+      if (assembledBlocks.includes(blockId)) return;
+      assembledBlocks.push(blockId);
+      document.getElementById(`btn-${blockId}`).classList.add('opacity-40', 'pointer-events-none');
+      
+      const container = document.getElementById('assembly-container');
+      const emptyMsg = document.getElementById('empty-msg');
+      if (emptyMsg) emptyMsg.style.display = 'none';
+
+      const blockElement = document.createElement('div');
+      blockElement.id = `assembled-${blockId}`;
+      blockElement.className = 'w-full text-xs font-bold p-2.5 rounded-lg text-white shadow ';
+      
+      if (blockId === 'turn_video' || blockId === 'analyse_image') blockElement.className += 'bg-rose-600';
+      else if (blockId === 'if_faces') blockElement.className += 'bg-amber-500';
+      else blockElement.className += 'bg-indigo-500';
+
+      const blockLabels = {
+        turn_video: '📷 turn [on] video on stage with [0]% transparency',
+        analyse_image: '🔍 analyse image from [camera]',
+        if_faces: '❓ if <get # faces > 0> then',
+        say_expression: '💬 say (get expression of face 1) for (2) seconds',
+        say_no_face: '💬 else say [No face detected] for (2) seconds'
+      };
+
+      blockElement.innerText = blockLabels[blockId];
+      container.appendChild(blockElement);
+    }
+
+    function resetLogicBuilder() {
+      assembledBlocks = [];
+      const container = document.getElementById('assembly-container');
+      container.innerHTML = '<span id="empty-msg" class="text-xs font-semibold text-amber-700 text-center">Click blocks above to assemble loop!</span>';
+      
+      ['turn_video', 'analyse_image', 'if_faces', 'say_expression', 'say_no_face'].forEach(id => {
+        const btn = document.getElementById(`btn-${id}`);
+        if (btn) btn.classList.remove('opacity-40', 'pointer-events-none');
+      });
+
+      const execBox = document.getElementById('execution-box');
+      execBox.innerHTML = 'Assemble all 5 blocks to test program logic!';
+      execBox.className = 'bg-slate-800/80 border border-slate-700 rounded-2xl p-5 text-sm font-mono text-slate-300 leading-relaxed min-h-[180px] flex items-center justify-center text-center';
+    }
+
+    function verifyLogicProgram() {
+      const execBox = document.getElementById('execution-box');
+      
+      if (assembledBlocks.length < 5) {
+        execBox.innerHTML = '⚠️️ Please add all 5 blocks before running verification!';
+        execBox.className = 'bg-amber-950/60 border border-amber-600 text-amber-200 rounded-2xl p-5 text-sm font-mono leading-relaxed min-h-[180px] flex items-center justify-center text-center';
+        return;
+      }
+
+      const isCorrect = JSON.stringify(assembledBlocks) === JSON.stringify(correctOrder);
+      
+      if (isCorrect) {
+        execBox.innerHTML = '✅ <strong>Program Successful!</strong><br><br>Camera feed active (0% transparency). Analyzing video feed...<br><span class="text-emerald-400">Face detected! Expression: "Happy"</span>';
+        execBox.className = 'bg-emerald-950/60 border border-emerald-500 text-emerald-200 rounded-2xl p-5 text-sm font-mono leading-relaxed min-h-[180px] flex items-center justify-center text-center';
+      } else {
+        execBox.innerHTML = '❌ <strong>Logic Error!</strong><br><br>The sequence is incorrect. Make sure you initialize the camera video first, then analyze image, check face count, and say expression/else say no face.';
+        execBox.className = 'bg-rose-950/60 border border-rose-600 text-rose-200 rounded-2xl p-5 text-sm font-mono leading-relaxed min-h-[180px] flex items-center justify-center text-center';
+      }
+    }
+
+    // Slide 10 Live Simulator
+    // Slide 10 AI Expressions & Custom Message Simulator
+const aiPresets = {
+  happy: {
+    line1: "FACES: 1 DETECTED",
+    line2: "EXPR: HAPPY :-)",
+    status: "📷 Camera analyzed image ➔ Face detected! Expression: HAPPY[cite: 5]"
+  },
+  surprised: {
+    line1: "FACES: 1 DETECTED",
+    line2: "EXPR: SURPRISED!",
+    status: "📷 Camera analyzed image ➔ Face detected! Expression: SURPRISED[cite: 5]"
+  },
+  sad: {
+    line1: "FACES: 1 DETECTED",
+    line2: "EXPR: SAD :-(",
+    status: "📷 Camera analyzed image ➔ Face detected! Expression: SAD[cite: 5]"
+  },
+  noface: {
+    line1: "FACES: 0 DETECTED",
+    line2: "NO FACE FOUND!",
+    status: "📷 Camera analyzed image ➔ No face detected in video feed[cite: 5]"
+  }
+};
+
+function triggerAiPreset(key) {
+  const data = aiPresets[key];
+  if (!data) return;
+
+  playCorrectSound();
+
+  // Populate inputs and update display
+  document.getElementById('simInputLine1').value = data.line1;
+  document.getElementById('simInputLine2').value = data.line2;
+  
+  document.getElementById('simLcdLine1').innerText = data.line1;
+  document.getElementById('simLcdLine2').innerText = data.line2;
+
+  const statusEl = document.getElementById('simLcdStatus');
+  statusEl.innerText = data.status;
+  statusEl.className = "text-xs md:text-sm font-bold text-emerald-700 bg-emerald-50 border-2 border-emerald-300 px-5 py-2 rounded-xl shadow-sm text-center w-full max-w-xl";
+}
+
+function updateSimLcd() {
+  const l1 = document.getElementById('simInputLine1').value || "ALPHAGEN";
+  const l2 = document.getElementById('simInputLine2').value || "SMART DISPLAY";
+
+  document.getElementById('simLcdLine1').innerText = l1.toUpperCase();
+  document.getElementById('simLcdLine2').innerText = l2.toUpperCase();
+
+  playCorrectSound();
+  const statusEl = document.getElementById('simLcdStatus');
+  statusEl.innerText = "Display Status: PRINT SUCCESSFUL! 📺";
+  statusEl.className = "text-xs md:text-sm font-bold text-brand-purple bg-white border-2 border-brand-purplePale px-5 py-2 rounded-xl shadow-sm text-center w-full max-w-xl";
+}
+
+function clearSimLcd() {
+  playTone(300, 'sine', 0.1);
+  document.getElementById('simLcdLine1').innerText = "";
+  document.getElementById('simLcdLine2').innerText = "";
+  document.getElementById('simInputLine1').value = "";
+  document.getElementById('simInputLine2').value = "";
+
+  const statusEl = document.getElementById('simLcdStatus');
+  statusEl.innerText = "Display Status: lcd.clear() executed 🧹";
+  statusEl.className = "text-xs md:text-sm font-bold text-amber-700 bg-amber-50 border-2 border-amber-300 px-5 py-2 rounded-xl shadow-sm text-center w-full max-w-xl";
+}
+
+    // Quiz Check
+    function checkLcdQuiz(qNum, isCorrect, btn) {
+      if (isCorrect) {
+        playCorrectSound();
+        btn.className = "flex-1 bg-green-500 text-white border-2 border-green-600 py-2 px-3 rounded-lg font-extrabold text-xs md:text-sm";
+        btn.innerText += " ✓";
+      } else {
+        playWrongSound();
+        btn.className = "flex-1 bg-red-500 text-white border-2 border-red-600 py-2 px-3 rounded-lg font-extrabold text-xs md:text-sm";
+        btn.innerText += " ✗";
+      }
+    }
+
+    // Navigation Mechanics
+    function renderDots() {
+      const container = document.getElementById('dotContainer');
+      container.innerHTML = '';
+      for (let i = 1; i <= totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.className = `w-3 h-3 rounded-full cursor-pointer transition-all ${i === currentSlide ? 'bg-brand-purple w-6' : 'bg-brand-greyMid opacity-50'}`;
+        dot.onclick = () => goToSlide(i);
+        container.appendChild(dot);
+      }
+    }
+
+    function updateSlideDisplay() {
+      document.querySelectorAll('.slide').forEach((slide, idx) => {
+        if (idx + 1 === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      document.getElementById('slideCounter').innerText = `${currentSlide} / ${totalSlides}`;
+      document.getElementById('slideSelect').value = currentSlide;
+
+      document.getElementById('prevBtn').disabled = (currentSlide === 1);
+      const nextBtn = document.getElementById('nextBtn');
+      if (currentSlide === totalSlides) {
+        nextBtn.innerText = 'Finish 🏆';
+      } else {
+        nextBtn.innerText = 'Next ➡️';
+      }
+
+      renderDots();
+    }
+
+    function goToSlide(n) {
+      if (n >= 1 && n <= totalSlides) {
+        currentSlide = n;
+        updateSlideDisplay();
+      }
+    }
+
+    function handleNextOrFinish() {
+      if (currentSlide === totalSlides) {
+        triggerFinishCelebration();
+      } else {
+        nextSlide();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlideDisplay();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlideDisplay();
+      }
+    }
+
+    // On Load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSlideDisplay();
+    });
+  </script>
+</body>
+</html>
